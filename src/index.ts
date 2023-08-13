@@ -1,5 +1,9 @@
 import { readdirSync } from "fs";
-import { concatonateInputs, downloadPartOfVideo } from "../video/lib";
+import {
+  concatonateInputs,
+  downloadPartOfVideo,
+  overlayImage,
+} from "../video/lib";
 import { getElements } from "./lib";
 
 const ffmpeg = require("fluent-ffmpeg");
@@ -18,6 +22,8 @@ enum Time {
   year = "year",
   all = "all",
 }
+
+const DIR = "/home/cavej/repositories/tiktok_explosion"
 
 const r = new snoowrap({
   userAgent: "Mozilla/5.0",
@@ -53,10 +59,8 @@ const init = async () => {
             elements.map((file) => `Data/${element.id}/Audio/${file}`),
             element.id
           );
-          console.log("conc");
         })
       );
-      console.log("end");
       resolve(null);
     } catch (err) {
       console.error(err);
@@ -67,28 +71,48 @@ const init = async () => {
   await concatmp3s;
 
   const downloadVideos = new Promise(async (resolve, reject) => {
-    elements.forEach(async (element) => {
-      const path = `Data/${element.id}/Audio/full.mp3`;
-      const duration: number = await new Promise((resolve, reject) => {
-        mp3Duration(path, (err: Error, duration: number) => {
-          if (err) reject(err);
-          resolve(duration);
+    try {
+      const downloadPromises = elements.map(async (element) => {
+        const path = `Data/${element.id}/Audio/full.mp3`;
+        const duration: number = await new Promise((resolve, reject) => {
+          mp3Duration(path, (err: Error, duration: number) => {
+            if (err) reject(err);
+            resolve(duration);
+          });
         });
-      });
-      const startTime = Math.random() * 3600;
+        const startTime = Math.random() * 3600;
 
-      await downloadPartOfVideo(
-        VIDEO_URL,
-        formatTime(startTime),
-        formatTime(duration),
-        element.id
-      );
+        return downloadPartOfVideo(
+          VIDEO_URL,
+          formatTime(duration),
+          element.id,
+          formatTime(startTime-60)
+        );
+      });
+
+      await Promise.all(downloadPromises);
       resolve(null);
-    });
+    } catch (error) {
+      console.error(error);
+      reject(error);
+    }
   });
-  await downloadVideos;
+
+  try {
+    const downloadedPaths = await downloadVideos;
+    console.log("Videos downloaded:", downloadedPaths);
+    await Promise.all(
+      elements.map(async (element) => {
+        await overlayImage(element.id);
+        console.log("overlayed");
+
+      })
+    );
+  } catch (error) {
+    console.error("Error during download or overlay:", error);
+  }
 };
 
 init();
 
-export { Time };
+export { Time, formatTime, DIR };
