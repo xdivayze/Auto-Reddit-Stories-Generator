@@ -1,20 +1,18 @@
-import { mkdirSync, unlink, unlinkSync } from "fs";
 import puppeteer from "puppeteer";
 import sharp from "sharp";
 
 async function captureScreenshot(id: string, subreddit: string) {
   const targetUrl = `https://www.reddit.com/r/${subreddit}/comments/${id}`;
   try {
-    const browser = await puppeteer.launch({ headless: true });
+    const browser = await puppeteer.launch({ headless: "new" });
     const page = await browser.newPage();
     await page.setViewport({ width: 1440, height: 1080 });
     await page.goto(targetUrl);
     await page.screenshot().then((buffer) => {
       try {
-
         cropScreenshot(buffer, `Data/${id}/title.png`);
-      } catch(err) {
-        console.error(err)
+      } catch (err) {
+        console.error(err);
       }
     });
     await browser.close();

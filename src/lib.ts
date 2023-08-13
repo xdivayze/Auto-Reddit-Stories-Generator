@@ -2,6 +2,29 @@ import * as fs from "fs";
 import * as googletts from "google-tts-api";
 import Snoowrap, { Submission } from "snoowrap";
 import { Time } from ".";
+import captureScreenshot from "../screenshot";
+
+async function getElements(
+  subreddit: string,
+  time: Time,
+  client: Snoowrap
+): Promise<Array<Submission>> {
+  return new Promise((resolve, reject) => {
+    getTopPosts(time, subreddit, client).then((elements) =>
+      elements.forEach((element) => {
+        fromText(element.selftext, element.title, element.id).then(async () => {
+          try {
+            await captureScreenshot(element.id, subreddit);
+            resolve(elements);
+          } catch (err) {
+            console.error(err);
+            reject(err);
+          }
+        });
+      })
+    );
+  });
+}
 
 async function getTopPosts(duration: Time, subreddit: string, r: Snoowrap) {
   const prom: Promise<Array<Submission>> = new Promise((resolve, _) => {
@@ -64,4 +87,4 @@ async function fromText(text: string, title: string, id: string) {
     });
 }
 
-export { fromText, getTopPosts };
+export { fromText, getTopPosts, getElements };
