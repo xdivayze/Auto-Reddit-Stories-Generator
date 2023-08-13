@@ -1,5 +1,5 @@
 import { readdirSync } from "fs";
-import { concatonateInputs } from "../video/lib";
+import { concatonateInputs, downloadPartOfVideo } from "../video/lib";
 import { getElements } from "./lib";
 
 const ffmpeg = require("fluent-ffmpeg");
@@ -42,43 +42,47 @@ const formatTime = (seconds: number) => {
 const init = async () => {
   const elements = await getElements(SUBREDDIT, Time.day, r);
 
-  const concatmp3s = new Promise((resolve, reject) => {
+  const concatmp3s = new Promise(async (resolve, reject) => {
     try {
-      elements.forEach(async (element) => {
-        const elements = readdirSync(`Data/${element.id}/Audio`);
-        elements.splice(elements.indexOf("title.mp3"), 1);
-        elements.unshift("title.mp3");
-        await concatonateInputs(
-          elements.map((file) => `Data/${element.id}/Audio/${file}`),
-          element.id
-        );
-      });
+      await Promise.all(
+        elements.map(async (element) => {
+          const elements = readdirSync(`Data/${element.id}/Audio`);
+          elements.splice(elements.indexOf("title.mp3"), 1);
+          elements.unshift("title.mp3");
+          await concatonateInputs(
+            elements.map((file) => `Data/${element.id}/Audio/${file}`),
+            element.id
+          );
+          console.log("conc");
+        })
+      );
+      console.log("end");
+      resolve(null);
     } catch (err) {
       console.error(err);
       reject(err);
     }
-    resolve(null);
   });
 
   await concatmp3s;
 
   const downloadVideos = new Promise(async (resolve, reject) => {
     elements.forEach(async (element) => {
-      const path = `Data/${element.id}/Audio/title.mp3`;
+      const path = `Data/${element.id}/Audio/full.mp3`;
       const duration: number = await new Promise((resolve, reject) => {
         mp3Duration(path, (err: Error, duration: number) => {
           if (err) reject(err);
           resolve(duration);
         });
       });
-      const endTime = Math.random() * 3600 * 60;
-      const startTime = endTime - duration;
+      const startTime = Math.random() * 3600;
 
-      ffmpeg(VIDEO_URL)
-        .setStartTime(startTime)
-        .setDuration(duration)
-        .output(`Data/${element.id}/bgvid.mp4`)
-        .run();
+      await downloadPartOfVideo(
+        VIDEO_URL,
+        formatTime(startTime),
+        formatTime(duration),
+        element.id
+      );
       resolve(null);
     });
   });
