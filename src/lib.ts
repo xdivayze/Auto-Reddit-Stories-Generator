@@ -1,23 +1,39 @@
-import Snoowrap, { Submission } from "snoowrap";
 import * as fs from "fs";
 import * as googletts from "google-tts-api";
+import Snoowrap, { Submission } from "snoowrap";
+import { Time } from ".";
 
-function getTopPosts(duration: string, subreddit: string, r: Snoowrap) {
-  r.getSubreddit(subreddit)
-    .getTop({ limit: 2, time: "day" })
-    .then((element: Array<Submission>) => {
-      element.forEach((element: Submission) => {
-        fs.writeFile(
-          `Data/Text/${element.title}.txt`,
-          `${element.title}\n\n\n${element.selftext}`,
-          () => null
-        );
+async function getTopPosts(duration: Time, subreddit: string, r: Snoowrap) {
+  const prom: Promise<Array<Submission>> = new Promise((resolve, _) => {
+    r.getSubreddit(subreddit)
+      .getTop({ limit: 2, time: duration })
+      .then((element: Array<Submission>) => {
+        let returnable = new Array<Submission>();
+        element.forEach((element: Submission) => {
+          const exists =
+            fs.existsSync(`Data/Audio/${element.title}`) &&
+            fs.existsSync(`Data/Text/${element.title}.txt`);
+          if (!exists) {
+            fs.writeFile(
+              `Data/Text/${element.title}.txt`,
+              `${element.title}\n\n\n${element.selftext}`,
+              () => null
+            );
+            returnable.push(element);
+          }
+          if (exists) {
+            console.error(`file already exists ${element.title}`);
+          }
+        });
+        resolve(returnable);
       });
-    });
+  });
+
+  return prom;
 }
 
 async function fromText(text: string, title: string) {
-  fs.mkdirSync("Data/Audio/"+title)
+  fs.mkdirSync("Data/Audio/" + title);
   let count = 0;
   googletts
     .getAllAudioBase64(text, {
@@ -27,17 +43,27 @@ async function fromText(text: string, title: string) {
       timeout: 10000,
     })
     .then((data) => {
-      
       data.forEach((data) => {
         const trimmedData = data.base64.replace("data:audio/mp3:base64,", "");
         const binaryData = Buffer.from(trimmedData, "base64");
+
         fs.writeFileSync(`Data/Audio/${title}/${count}.mp3`, binaryData);
-        count+=1;
-        
+        count += 1;
       });
     })
     .catch(console.error);
-
+  googletts
+    .getAudioBase64(title, {
+      lang: "en",
+      slow: false,
+      host: "https://translate.google.com",
+      timeout: 10000,
+    })
+    .then((data) => {
+      const trimmedData = data.replace("data:audio/mp3:base64,", "");
+      const binaryData = Buffer.from(trimmedData, "base64");
+      fs.writeFileSync(`Data/Audio/${title}/title.mp3`, binaryData);
+    });
 }
 
-export { getTopPosts, fromText };
+export { fromText, getTopPosts };

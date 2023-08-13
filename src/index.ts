@@ -3,9 +3,16 @@ import { fromText, getTopPosts } from "./lib";
 const snoowrap = require("snoowrap");
 require("dotenv").config();
 
-import * as fs from 'fs'
+const SUBREDDIT = "TrueOffMyChest";
 
-const SUBREDDIT = 'TrueOffMyChest'
+enum Time {
+  hour = "hour",
+  day = "day",
+  week = "week",
+  month = "month",
+  year = "year",
+  all = "all",
+}
 
 const r = new snoowrap({
   userAgent: "Mozilla/5.0",
@@ -15,12 +22,10 @@ const r = new snoowrap({
   password: process.env.reddit_pass,
 });
 
-getTopPosts("day", SUBREDDIT, r)
+getTopPosts(Time.day, SUBREDDIT, r).then((elements) =>
+  elements.forEach((element) => {
+    fromText(element.selftext, element.title);
+  })
+);
 
-fs.readdirSync('Data/Text').forEach((fileName) => {
-  const file = fs.readFileSync(`Data/Text/${fileName}`, 'utf-8')
-  const breaks = file.split("\n")
-  const title = breaks[0]
-  const body = breaks.filter((v,i) => i > 1).join(' ')
-  fromText(body, title)
-})
+export { Time };
