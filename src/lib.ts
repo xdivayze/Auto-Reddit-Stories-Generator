@@ -10,12 +10,11 @@ async function getTopPosts(duration: Time, subreddit: string, r: Snoowrap) {
       .then((element: Array<Submission>) => {
         let returnable = new Array<Submission>();
         element.forEach((element: Submission) => {
-          const exists =
-            fs.existsSync(`Data/Audio/${element.title}`) &&
-            fs.existsSync(`Data/Text/${element.title}.txt`);
+          const exists = fs.existsSync(`Data/${element.id}`);
           if (!exists) {
+            fs.mkdirSync("Data/" + element.id);
             fs.writeFile(
-              `Data/Text/${element.title}.txt`,
+              `Data/${element.id}/${element.id}.txt`,
               `${element.title}\n\n\n${element.selftext}`,
               () => null
             );
@@ -32,8 +31,8 @@ async function getTopPosts(duration: Time, subreddit: string, r: Snoowrap) {
   return prom;
 }
 
-async function fromText(text: string, title: string) {
-  fs.mkdirSync("Data/Audio/" + title);
+async function fromText(text: string, title: string, id: string) {
+  fs.mkdirSync("Data/" + id + "/Audio");
   let count = 0;
   googletts
     .getAllAudioBase64(text, {
@@ -46,8 +45,7 @@ async function fromText(text: string, title: string) {
       data.forEach((data) => {
         const trimmedData = data.base64.replace("data:audio/mp3:base64,", "");
         const binaryData = Buffer.from(trimmedData, "base64");
-
-        fs.writeFileSync(`Data/Audio/${title}/${count}.mp3`, binaryData);
+        fs.writeFileSync(`Data/${id}/Audio/${count}.mp3`, binaryData);
         count += 1;
       });
     })
@@ -62,7 +60,7 @@ async function fromText(text: string, title: string) {
     .then((data) => {
       const trimmedData = data.replace("data:audio/mp3:base64,", "");
       const binaryData = Buffer.from(trimmedData, "base64");
-      fs.writeFileSync(`Data/Audio/${title}/title.mp3`, binaryData);
+      fs.writeFileSync(`Data/${id}/Audio/title.mp3`, binaryData);
     });
 }
 

@@ -1,3 +1,4 @@
+import captureScreenshot from "../screenshot";
 import { fromText, getTopPosts } from "./lib";
 
 const snoowrap = require("snoowrap");
@@ -24,7 +25,15 @@ const r = new snoowrap({
 
 getTopPosts(Time.day, SUBREDDIT, r).then((elements) =>
   elements.forEach((element) => {
-    fromText(element.selftext, element.title);
+    fromText(element.selftext, element.title, element.id).then(() => {
+      try {
+
+        captureScreenshot(element.id, SUBREDDIT)
+      } catch (err) {
+        console.error(err)
+      }
+    });
+
   })
 );
 
