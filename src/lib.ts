@@ -1,8 +1,11 @@
 import * as fs from "fs";
 import * as googletts from "google-tts-api";
 import Snoowrap, { Submission } from "snoowrap";
-import { Time } from ".";
+import { Time, formatTime } from ".";
 import captureScreenshot from "../screenshot";
+import { appendToSubtitles } from "../video/lib";
+
+const mp3duration = require("mp3-duration");
 
 async function getElements(
   subreddit: string,
@@ -24,6 +27,50 @@ async function getElements(
       })
     );
   });
+}
+
+async function subtitleHandle(id: string) {
+  const data = fs
+    .readFileSync(`Data/${id}/${id}.txt`)
+    .toString()
+    // .split("\n")
+    // .slice(1)
+    // .toString()
+    .split(" ");
+  const mp3len: number = await new Promise((resolve, reject) => {
+    mp3duration(`Data/${id}/Audio/full.mp3`, (err: Error, duration: number) => {
+      if (err) {
+        reject(err);
+      }
+      resolve(duration);
+    });
+  });
+  const timeFor8Words = Math.floor(((mp3len * 8) / data.length) * 1000) / 1000;
+  const max = Math.floor(data.length / 8);
+
+  for (let i = 0; i <= max; i++) {
+    let startTime = formatTime(i * timeFor8Words)
+      .replace(".", ",")
+      .substring(0, 11);
+    let endTime = formatTime((i + 1) * timeFor8Words)
+      .replace(".", ",")
+      .substring(0, 11);
+    if (startTime.length < 11) {
+      startTime += ",000";
+    }
+    if (endTime.length < 11) {
+      endTime += ",000";
+    }
+    const content = data.slice(0, 8).join(" ");
+    data.splice(0, 8);
+    appendToSubtitles(
+      `Data/${id}/subs.srt`,
+      i + 1,
+      content,
+      startTime,
+      endTime
+    );
+  }
 }
 
 async function getTopPosts(duration: Time, subreddit: string, r: Snoowrap) {
@@ -87,4 +134,4 @@ async function fromText(text: string, title: string, id: string) {
     });
 }
 
-export { fromText, getTopPosts, getElements };
+export { fromText, getTopPosts, getElements, subtitleHandle };

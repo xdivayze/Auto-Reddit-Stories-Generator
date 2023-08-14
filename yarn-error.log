@@ -1,5 +1,5 @@
 Arguments: 
-  /usr/bin/node /usr/bin/yarn add @types/ytdl-core
+  /usr/bin/node /usr/bin/yarn add @types/subtitles-parser
 
 PATH: 
   /home/cavej/.cargo/bin:/usr/condabin:/usr/local/sbin:/usr/local/bin:/usr/bin:/opt/android-sdk/platform-tools:/opt/cuda/bin:/opt/cuda/nsight_compute:/opt/cuda/nsight_systems/bin:/home/cavej/.dotnet/tools:/var/lib/flatpak/exports/bin:/usr/lib/jvm/default/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl:/home/cavej/.local/share/JetBrains/Toolbox/scripts:/home/cavej/.local/share/coursier/bin:/home/cavej/.spicetify
@@ -14,7 +14,7 @@ Platform:
   linux x64
 
 Trace: 
-  Error: https://registry.yarnpkg.com/@types%2fytdl-core: Not found
+  Error: https://registry.yarnpkg.com/@types%2fsubtitles-parser: Not found
       at params.callback [as _callback] (/usr/lib/node_modules/yarn/lib/cli.js:66145:18)
       at self.callback (/usr/lib/node_modules/yarn/lib/cli.js:140890:22)
       at Request.emit (node:events:513:28)
@@ -48,6 +48,7 @@ npm manifest:
       "puppeteer": "^21.0.3",
       "sharp": "^0.32.4",
       "snoowrap": "^1.23.0",
+      "subtitles-parser": "^0.0.2",
       "ts-node": "^10.9.1",
       "typescript": "^5.1.6",
       "ytdl-core": "^4.11.5"
@@ -1589,6 +1590,11 @@ Lockfile:
     version "2.0.1"
     resolved "https://registry.yarnpkg.com/strip-json-comments/-/strip-json-comments-2.0.1.tgz#3c531942e908c2697c0ec344858c286c7ca0a60a"
     integrity sha512-4gB8na07fecVVkOI6Rs4e7T6NOTki5EmL7TUduTs6bu3EdnSycntVJ4re8kgZA+wx9IueI2Y11bfbgwtzuE0KQ==
+  
+  subtitles-parser@^0.0.2:
+    version "0.0.2"
+    resolved "https://registry.yarnpkg.com/subtitles-parser/-/subtitles-parser-0.0.2.tgz#cf2fcc3e397b1c7f831e1365f6b3ce37d3155194"
+    integrity sha512-7JermakMYQRrn9mTG5mXzbHeIqU8DINY06xuUVt3wxTVf7OiXN2aN/+g2oVVl5HISoPwabnQE0vlaFqo1mgLHQ==
   
   supports-color@^5.3.0, supports-color@^5.5.0:
     version "5.5.0"

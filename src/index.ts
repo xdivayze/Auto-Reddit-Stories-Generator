@@ -1,10 +1,13 @@
 import { readdirSync } from "fs";
 import {
+  addSubtitlesToVideo,
   concatonateInputs,
   downloadPartOfVideo,
   overlayImage,
 } from "../video/lib";
-import { getElements } from "./lib";
+import { getElements, subtitleHandle } from "./lib";
+import { spawnSync } from "child_process";
+import { join } from "path";
 
 const ffmpeg = require("fluent-ffmpeg");
 const mp3Duration = require("mp3-duration");
@@ -23,7 +26,7 @@ enum Time {
   all = "all",
 }
 
-const DIR = "/home/cavej/repositories/tiktok_explosion"
+const DIR = "/home/cavej/repositories/tiktok_explosion";
 
 const r = new snoowrap({
   userAgent: "Mozilla/5.0",
@@ -86,7 +89,7 @@ const init = async () => {
           VIDEO_URL,
           formatTime(duration),
           element.id,
-          formatTime(startTime-60)
+          formatTime(startTime - 60)
         );
       });
 
@@ -104,13 +107,25 @@ const init = async () => {
     await Promise.all(
       elements.map(async (element) => {
         await overlayImage(element.id);
-        console.log("overlayed");
-
       })
     );
   } catch (error) {
     console.error("Error during download or overlay:", error);
   }
+  await Promise.all(
+    elements.map(async (element) => {
+      await subtitleHandle(element.id);
+      const args = [
+        "-i",
+        join(DIR, `/Data/${element.id}/subs.srt`),
+        join(DIR, `/Data/${element.id}/converted.ass`),
+      ];
+      const process = spawnSync("ffmpeg", args)
+      console.error(process.stderr.toString())
+      
+      await addSubtitlesToVideo(element.id)
+    })
+  );
 };
 
 init();

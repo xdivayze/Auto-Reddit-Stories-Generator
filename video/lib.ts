@@ -1,7 +1,8 @@
+import { spawn } from "child_process";
+import { join } from "path";
 import ytdl from "ytdl-core";
 import { DIR, formatTime } from "../src";
-import { exec, spawn, spawnSync } from "child_process";
-import { join } from "path";
+import { appendFileSync } from "fs";
 
 const mp3Duration = require("mp3-duration");
 
@@ -22,8 +23,59 @@ function mergeInputs(path1: string, path2: string, id: string): Promise<null> {
   });
 }
 
+async function addSubtitlesToVideo(id: string) {
+  return new Promise(async (resolve, reject) => {
+    const titleLen: number = await new Promise((resolve, reject) => {
+      mp3Duration(
+        `Data/${id}/Audio/title.mp3`,
+        (err: Error, duration: number) => {
+          if (err) {
+            reject(err);
+          }
+          resolve(duration);
+        }
+      );
+    });
+    const command = "ffmpeg";
+    const args = [
+      "-i",
+      join(DIR, `/Data/${id}/overlayed.mp4`),
+      "-ss",
+      formatTime(titleLen-1.5),
+      "-vf",
+      `subtitles=${join(
+        DIR,
+        `/Data/${id}/converted.ass`
+      )}:force_style='Alignment=5,MarginV=400,MarginL=200,MarginR=200,PrimaryColour=&HFFFFFF,Fontsize=25,PlayResX=390,PlayResY=844'`,
+      join(DIR, `/Data/${id}/subtitled.mp4`),
+    ];
+
+    const process = spawn(command, args);
+    process.stderr.on("data", (data: Buffer) => console.error(data.toString()));
+    process.stdout.on("data", (data: Buffer) => console.log(data.toString()));
+    process.on("close", (code) => {
+      if (code === 0) {
+        resolve(0);
+      } else {
+        resolve(-1);
+      }
+    });
+  });
+}
+
+function appendToSubtitles(
+  path: string,
+  count: number,
+  content: string,
+  startTime: string,
+  endTime: string
+) {
+  appendFileSync(path, `${count.toString()}\n`);
+  appendFileSync(path, `${startTime} --> ${endTime}\n`);
+  appendFileSync(path, `${content}\n\n`);
+}
+
 async function overlayImage(id: string) {
-  // spawnSync("touch", [join(DIR, `/Data/${id}/overlayed.mp4`)]);
   return new Promise(async (resolve, reject) => {
     const command = "ffmpeg";
     const ppDuration: number = await new Promise((resolve, reject) =>
@@ -49,7 +101,6 @@ async function overlayImage(id: string) {
       "copy",
       join(DIR, `/Data/${id}/overlayed.mp4`),
     ];
-
 
     const ffmpegProcess = spawn(command, ffmpegArgs);
 
@@ -92,7 +143,7 @@ async function executeFFmpeg(
       "-i",
       videoStreamUrl,
       "-t",
-      "00:00:10",
+      "00:00:30",
       "-c:v",
       "copy",
       "-c:a",
@@ -133,7 +184,7 @@ async function downloadPartOfVideo(
 
   const videoInfo = await ytdl.getInfo(videoUrl);
   const bestVideoFormatUrl = ytdl.chooseFormat(videoInfo.formats, {
-    quality: "highestvideo",
+    quality: "136",
   }).url;
 
   try {
@@ -142,6 +193,7 @@ async function downloadPartOfVideo(
       outputPath,
       pseudoStartDuration,
       join(DIR, `/Data/${id}/Audio/full.mp3`),
+
       duration
     );
     return outputPath;
@@ -163,4 +215,11 @@ function concatonateInputs(list: Array<string>, id: string) {
   });
 }
 
-export { mergeInputs, concatonateInputs, downloadPartOfVideo, overlayImage };
+export {
+  concatonateInputs,
+  downloadPartOfVideo,
+  mergeInputs,
+  overlayImage,
+  appendToSubtitles,
+  addSubtitlesToVideo,
+};

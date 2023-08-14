@@ -6,7 +6,7 @@ async function captureScreenshot(id: string, subreddit: string) {
   try {
     const browser = await puppeteer.launch({ headless: "new" });
     const page = await browser.newPage();
-    await page.setViewport({ width: 1440, height: 1080 });
+    await page.setViewport({ width: 390, height: 844 });
     await page.goto(targetUrl);
     await page.screenshot().then((buffer) => {
       try {
@@ -23,7 +23,8 @@ async function captureScreenshot(id: string, subreddit: string) {
 
 function cropScreenshot(path: Buffer, output: string) {
   sharp(path)
-    .extract({ left: 270, top: 50, width: 800, height: 600 })
+    .extract({ left: 0, top: 50, width: 390, height: 600 })
+
     .toFile(output, function (err) {
       if (err) throw err;
     });
