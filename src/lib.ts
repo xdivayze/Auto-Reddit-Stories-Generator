@@ -88,7 +88,7 @@ async function subtitleHandle(id: string) {
 async function getTopPosts(duration: Time, subreddit: string, r: Snoowrap) {
   const prom: Promise<Array<Submission>> = new Promise((resolve, _) => {
     r.getSubreddit(subreddit)
-      .getTop({ limit: 2, time: duration })
+      .getTop({ limit: 1, time: duration })
       .then((element: Array<Submission>) => {
         let returnable = new Array<Submission>();
         element.forEach((element: Submission) => {

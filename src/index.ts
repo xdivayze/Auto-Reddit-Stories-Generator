@@ -89,7 +89,7 @@ const init = async () => {
           VIDEO_URL,
           formatTime(duration),
           element.id,
-          formatTime(startTime - 60)
+          formatTime(startTime)
         );
       });
 
@@ -122,7 +122,7 @@ const init = async () => {
       ];
       const process = spawnSync("ffmpeg", args)
       console.error(process.stderr.toString())
-      
+
       await addSubtitlesToVideo(element.id)
     })
   );

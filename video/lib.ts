@@ -141,7 +141,7 @@ async function executeFFmpeg(
       "-i",
       videoStreamUrl,
       "-t",
-      "00:00:30",
+      duration,
       "-vf",
       `crop=390:844`,
       "-c:v",
@@ -152,7 +152,6 @@ async function executeFFmpeg(
       "1:v:0",
       "-map",
       "0:a:0",
-      "-shortest",
       outputPath,
     ];
 
@@ -198,7 +197,7 @@ async function downloadPartOfVideo(
       pseudoStartDuration,
       join(DIR, `/Data/${id}/Audio/full.mp3`),
 
-      duration
+      "00:00:35"
     );
     return outputPath;
   } catch (error) {
