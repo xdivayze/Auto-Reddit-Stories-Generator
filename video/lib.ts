@@ -40,13 +40,11 @@ async function addSubtitlesToVideo(id: string) {
     const args = [
       "-i",
       join(DIR, `/Data/${id}/overlayed.mp4`),
-      "-ss",
-      formatTime(titleLen-1.5),
       "-vf",
       `subtitles=${join(
         DIR,
         `/Data/${id}/converted.ass`
-      )}:force_style='Alignment=5,MarginV=400,MarginL=200,MarginR=200,PrimaryColour=&HFFFFFF,Fontsize=25,PlayResX=390,PlayResY=844'`,
+      )}:force_style='Alignment=5,MarginV=400,PrimaryColour=&HFFFFFF,Fontsize=25,PlayResX=390,PlayResY=844'`,
       join(DIR, `/Data/${id}/subtitled.mp4`),
     ];
 
@@ -96,7 +94,7 @@ async function overlayImage(id: string) {
       "-i",
       pngPath,
       "-filter_complex",
-      `overlay=880:420:enable='between(t,0,${ppDuration})'`,
+      `overlay=32:172:enable='between(t,0,${ppDuration})'`,
       "-c:a",
       "copy",
       join(DIR, `/Data/${id}/overlayed.mp4`),
@@ -144,8 +142,10 @@ async function executeFFmpeg(
       videoStreamUrl,
       "-t",
       "00:00:30",
+      "-vf",
+      `crop=390:844`,
       "-c:v",
-      "copy",
+      "libx264",
       "-c:a",
       "aac",
       "-map",
@@ -167,6 +167,10 @@ async function executeFFmpeg(
       }
     });
 
+    ffmpegProcess.stderr.on("data", (data: Buffer) =>
+      console.error(data.toString())
+    );
+
     ffmpegProcess.on("error", (error) => {
       console.error("FFmpeg process error:", error);
       reject(error);
@@ -184,7 +188,7 @@ async function downloadPartOfVideo(
 
   const videoInfo = await ytdl.getInfo(videoUrl);
   const bestVideoFormatUrl = ytdl.chooseFormat(videoInfo.formats, {
-    quality: "136",
+    quality: "highest",
   }).url;
 
   try {

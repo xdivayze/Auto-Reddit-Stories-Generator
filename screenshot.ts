@@ -24,7 +24,7 @@ async function captureScreenshot(id: string, subreddit: string) {
 function cropScreenshot(path: Buffer, output: string) {
   sharp(path)
     .extract({ left: 0, top: 50, width: 390, height: 600 })
-
+    .resize(390*(5/6), 600*(5/6))
     .toFile(output, function (err) {
       if (err) throw err;
     });

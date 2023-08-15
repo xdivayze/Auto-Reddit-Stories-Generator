@@ -33,9 +33,9 @@ async function subtitleHandle(id: string) {
   const data = fs
     .readFileSync(`Data/${id}/${id}.txt`)
     .toString()
-    // .split("\n")
-    // .slice(1)
-    // .toString()
+    .split("\n")
+    .slice(1)
+    .toString()
     .split(" ");
   const mp3len: number = await new Promise((resolve, reject) => {
     mp3duration(`Data/${id}/Audio/full.mp3`, (err: Error, duration: number) => {
@@ -45,14 +45,26 @@ async function subtitleHandle(id: string) {
       resolve(duration);
     });
   });
+
+  const titleLen: number = await new Promise((resolve, reject) => {
+    mp3duration(
+      `Data/${id}/Audio/title.mp3`,
+      (err: Error, duration: number) => {
+        if (err) {
+          reject(err);
+        }
+        resolve(duration);
+      }
+    );
+  });
   const timeFor8Words = Math.floor(((mp3len * 8) / data.length) * 1000) / 1000;
   const max = Math.floor(data.length / 8);
 
   for (let i = 0; i <= max; i++) {
-    let startTime = formatTime(i * timeFor8Words)
+    let startTime = formatTime(i * timeFor8Words + titleLen)
       .replace(".", ",")
       .substring(0, 11);
-    let endTime = formatTime((i + 1) * timeFor8Words)
+    let endTime = formatTime((i + 1) * timeFor8Words + titleLen)
       .replace(".", ",")
       .substring(0, 11);
     if (startTime.length < 11) {
