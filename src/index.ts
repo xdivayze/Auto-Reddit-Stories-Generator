@@ -26,7 +26,7 @@ enum Time {
   all = "all",
 }
 
-const DIR = "/home/cavej/repositories/tiktok_explosion";
+const DIR = join(__dirname, '../');
 
 const r = new snoowrap({
   userAgent: "Mozilla/5.0",
